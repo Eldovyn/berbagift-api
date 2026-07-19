@@ -8,7 +8,7 @@ from routes.auth import router as auth_router
 from routes.token import router as token_router
 from routes.user import router as user_router
 from schemas.response import APIResponse
-from databases.connection import engine
+from databases.connection import engine, db_connection
 from models.base import Base
 import models.user
 import models.nonce
@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)       # ensure Listing collection/indexes a
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Wait for MySQL to be ready before creating tables
+    db_connection.wait_for_connection(max_retries=60, delay=3)
     # Create all SQLAlchemy tables (MySQL)
     Base.metadata.create_all(bind=engine)
     # Connect to MongoDB for indexer
