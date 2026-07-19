@@ -1,0 +1,86 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: bagithr_db_dev
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:-1234567890}"
+      MYSQL_DATABASE: "${DB_NAME:-bagithr}"
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'echo > /dev/tcp/127.0.0.1/3306' 2>/dev/null",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  mongo:
+    image: mongo:6.0
+    container_name: bagithr_mongo_dev
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER:-admin}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD:-password}"
+      MONGO_INITDB_DATABASE: "${MONGO_DB_NAME:-bagithr_indexer}"
+    ports:
+      - "127.0.0.1:${MONGO_PORT:-27018}:27017"
+    volumes:
+      - mongo_data_dev:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --authenticationDatabase admin -u \"${MONGO_USER:-admin}\" -p \"${MONGO_PASSWORD:-password}\" --eval \"db.adminCommand('ping')\" --quiet",
+        ]
+      timeout: 20s
+      retries: 10
+      start_period: 15s
+
+  backend:
+    build:
+      context: .
+      target: dev
+    container_name: bagithr_backend_dev
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: "${DB_USER:-root}"
+      DB_PASSWORD: "${DB_PASSWORD:-1234567890}"
+      DB_NAME: "${DB_NAME:-bagithr}"
+      APP_ENV: development
+      MONGO_HOST: mongo
+      MONGO_USER: "${MONGO_USER:-admin}"
+      MONGO_PASSWORD: "${MONGO_PASSWORD:-password}"
+      MONGO_DB_NAME: "${MONGO_DB_NAME:-bagithr_indexer}"
+      SOROBAN_RPC_URL: "${SOROBAN_RPC_URL:-https://soroban-testnet.stellar.org}"
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/\")'",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+
+volumes:
+  mysql_data_dev:
+  mongo_data_dev:
