@@ -18,7 +18,6 @@ from services.socket_manager import create_socket_app
 from fastapi import APIRouter, Form, HTTPException
 from fastapi.responses import PlainTextResponse
 import logging
-from fastapi.middleware.cors import CORSMiddleware
 import threading
 from contextlib import asynccontextmanager
 from configs.mongo_db import connect_db as connect_mongo_db
@@ -45,14 +44,6 @@ app = FastAPI(
     description="Backend API using FastAPI",
     version="1.0.0",
     lifespan=lifespan
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 from fastapi.exceptions import RequestValidationError
