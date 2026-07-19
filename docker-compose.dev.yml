@@ -14,8 +14,14 @@ services:
     healthcheck:
       test:
         [
-          "CMD-SHELL",
-          "bash -c 'echo > /dev/tcp/127.0.0.1/3306' 2>/dev/null",
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_PASSWORD:-1234567890}",
         ]
       interval: 5s
       timeout: 5s
