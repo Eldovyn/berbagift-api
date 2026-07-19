@@ -8,15 +8,12 @@ services:
       MYSQL_DATABASE: "${DB_NAME:-bagithr}"
       MYSQL_ROOT_HOST: "%"
     ports:
-      - "127.0.0.1:${DB_PORT:-3307}:3306"
+      - "127.0.0.1:${DB_PORT:-3306}:3306"
     volumes:
       - mysql_data_prod:/var/lib/mysql
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD:-1234567890}",
-        ]
+        ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 5s
       retries: 20

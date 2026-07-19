@@ -13,10 +13,7 @@ services:
       - mysql_data_dev:/var/lib/mysql
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD:-1234567890}",
-        ]
+        ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 5s
       retries: 20

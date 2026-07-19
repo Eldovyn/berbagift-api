@@ -1,8 +1,6 @@
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import OperationalError
 from configs.database import DatabaseConfig
-import time
 
 
 class DatabaseConnection:
@@ -24,28 +22,6 @@ class DatabaseConnection:
                 autocommit=False, autoflush=False, bind=self.engine
             )
         return self._SessionLocal
-
-    def wait_for_connection(self, max_retries: int = 60, delay: float = 3):
-        """Block until a test query succeeds or max_retries exhausted."""
-        eng = self.engine
-        for attempt in range(1, max_retries + 1):
-            try:
-                with eng.connect() as conn:
-                    conn.execute(text("SELECT 1"))
-                print(f"[db] MySQL connection established (attempt {attempt})")
-                return True
-            except OperationalError as e:
-                if attempt == max_retries:
-                    raise RuntimeError(
-                        f"Could not connect to MySQL after {max_retries} attempts "
-                        f"(last error: {e.orig if e.orig else e})"
-                    ) from e
-                print(
-                    f"[db] Waiting for MySQL... "
-                    f"attempt {attempt}/{max_retries} ({e.orig if e.orig else e})"
-                )
-                time.sleep(delay)
-        return False
 
     def get_db_session(self):
         db = self.SessionLocal()
