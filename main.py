@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from routes.hello import router as hello_router
 from routes.auth import router as auth_router
 from routes.token import router as token_router
@@ -75,7 +75,6 @@ class RawCORSMiddleware(BaseHTTPMiddleware):
 app.add_middleware(RawCORSMiddleware)
 
 from fastapi.exceptions import RequestValidationError
-from fastapi import Request
 from fastapi.responses import JSONResponse
 
 @app.exception_handler(RequestValidationError)
