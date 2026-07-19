@@ -46,6 +46,34 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
+# ── Raw CORS middleware (like Flask before_request / after_request) ──
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+
+class RawCORSMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Preflight — return immediately with CORS headers
+        if request.method == "OPTIONS":
+            headers = {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "86400",
+            }
+            return Response(status_code=200, headers=headers)
+
+        response = await call_next(request)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "ETag"
+        return response
+
+
+app.add_middleware(RawCORSMiddleware)
+
 from fastapi.exceptions import RequestValidationError
 from fastapi import Request
 from fastapi.responses import JSONResponse
